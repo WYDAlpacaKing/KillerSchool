@@ -9,6 +9,12 @@ public class WeaponData : ScriptableObject
     public float maxRange = 100f;
     public float fireRate = 0.2f;
 
+    [Header("=== Damage Logic ===")]
+    [Tooltip("伤害距离衰减曲线。\n" +
+         "X轴: 距离 (0 = 枪口, 1 = 最大射程)\n" +
+         "Y轴: 伤害倍率 (1 = 满伤, 0.5 = 半伤)")]
+    public AnimationCurve damageFalloff = new AnimationCurve(new Keyframe(0f, 1f), new Keyframe(1f, 0.5f));
+
     [Header("=== Physics ===")]
     [Tooltip("击中刚体时的推力")]
     public float impactForce = 5f;

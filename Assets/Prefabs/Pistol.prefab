@@ -156,8 +156,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   currentSpread: 0
   weaponName: SimplePistol
-  fireMode: 0
-  fireRate: 0.1
+  fireMode: 1
+  fireRate: 0.2
   recoilStrength: 1
   weaponData: {fileID: 11400000, guid: 3ff484402e15f184a94bfa5b425eba7a, type: 2}
   muzzlePoint: {fileID: 6334931038870113164}

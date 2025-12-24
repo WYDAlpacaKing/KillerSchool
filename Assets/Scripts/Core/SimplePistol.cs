@@ -48,7 +48,12 @@ public class SimplePistol : WeaponBase
         IDamageable damageable = hit.collider.GetComponent<IDamageable>();
         if (damageable != null)
         {
-            damageable.TakeDamage(weaponData.damage, hit.point, hit.normal);
+            //距离衰减计算
+            float distance = Vector3.Distance(muzzlePoint.position, hit.point);
+            float distanceRatio = Mathf.Clamp01(distance / weaponData.maxRange);
+            float damageMultiplier = weaponData.damageFalloff.Evaluate(distanceRatio);
+            float finalDamage = weaponData.damage * damageMultiplier;
+            damageable.TakeDamage(finalDamage, hit.point, hit.normal);
 
             // 命中特效!!!!!!!!!!!
             if (weaponData.hitVFXPrefab != null)

@@ -235,6 +235,7 @@ public class NoodleArmController : MonoBehaviour
         float speed = (debugState != DebugPoseState.Gameplay_Default) ? 50f : transitionSpeed;
         float t = Time.deltaTime * speed;
 
+        //TODO: 优化插值方式
         runtimePose.shoulderPos = Vector3.Lerp(runtimePose.shoulderPos, targetPose.shoulderPos, t);
         runtimePose.wristPos = Vector3.Lerp(runtimePose.wristPos, targetPose.wristPos, t);
         runtimePose.wristGap = Mathf.Lerp(runtimePose.wristGap, targetPose.wristGap, t);

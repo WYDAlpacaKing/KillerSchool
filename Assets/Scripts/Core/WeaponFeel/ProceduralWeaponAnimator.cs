@@ -84,6 +84,8 @@ public class ProceduralWeaponAnimator : MonoBehaviour
         }
 
         modelTransform.localPosition = finalPos;
+        // 如果旋转角度太大，可能会出现万向节锁问题，考虑使用 Quaternion.Lerp 来平滑旋转
+        modelTransform.localEulerAngles = Vector3.Lerp(modelTransform.localEulerAngles, finalRot, dt * 15f);
         modelTransform.localRotation = Quaternion.Euler(finalRot);
     }
 
