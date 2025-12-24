@@ -49,6 +49,72 @@ public class WeaponFeelConfig: ScriptableObject
     [Tooltip("恢复时长：从开火结束到准星完全自动回正所需的时间（秒）。")]
     public float recoilRecoveryDuration = 0.3f;
 
+    [Header("=== Module C2: True Recoil (真实后坐力 - 全自动专用) ===")]
+    
+    [Tooltip("真实后坐力比例：后坐力中有多少比例会真正改变玩家视角（可压枪抵消）。\n" +
+             "0 = 纯视觉后坐力（自动回复），1 = 完全真实后坐力（需要压枪）。\n" +
+             "全自动武器建议 0.6-0.8，半自动武器建议 0。")]
+    [Range(0f, 1f)]
+    public float trueRecoilRatio = 0.7f;
+
+    [Tooltip("真实后坐力累积上限：视角最多向上抬起的角度。\n" +
+             "超过此上限后，垂直后坐力不再生效，防止玩家看天。\n" +
+             "建议值 8-15 度。")]
+    public float maxTrueRecoilAccumulation = 12f;
+
+    [Tooltip("真实后坐力恢复延迟：停止射击后多久开始自动回正（秒）。\n" +
+             "给玩家一个压枪的时间窗口。")]
+    public float trueRecoilRecoveryDelay = 0.3f;
+
+    [Tooltip("真实后坐力恢复速度：停止射击后视角自动回正的速度。\n" +
+             "值越大回正越快，0 = 不自动回正（完全依赖玩家压枪）。")]
+    public float trueRecoilRecoverySpeed = 3f;
+
+    public enum HorizontalRecoilMode
+    {
+        [Tooltip("随机：每发子弹在 horizontalRecoil 范围内随机偏移")]
+        Random,
+        [Tooltip("交替：左右来回跳动，适合冲锋枪")]
+        Alternating,
+        [Tooltip("序列：按照预设的后坐力模式序列执行，适合需要固定后坐力图案的武器")]
+        Pattern
+    }
+    [Header("=== Module C2b: Horizontal Recoil Pattern (水平后坐力模式) ===")]
+
+    
+
+    [Tooltip("水平后坐力模式：\n" +
+             "Random = 随机偏移\n" +
+             "Alternating = 左右交替跳动（冲锋枪常用）\n" +
+             "Pattern = 按预设序列执行")]
+    
+    public HorizontalRecoilMode horizontalMode = HorizontalRecoilMode.Random;
+
+    [Tooltip("交替模式的基础偏移量：每发子弹水平偏移的角度。\n" +
+             "正值表示偏移幅度，方向会自动交替。")]
+    public float alternatingRecoilAmount = 1.5f;
+
+    [Tooltip("交替模式的随机扰动：在交替基础上添加的随机偏移范围。\n" +
+             "增加一些不可预测性，让手感更自然。")]
+    public float alternatingRandomness = 0.3f;
+
+    [Tooltip("后坐力模式序列（Pattern模式专用）：\n" +
+             "定义每发子弹的水平偏移角度，循环使用。\n" +
+             "例如：[-1, 2, -2, 1, 0] 表示先左再右再左...")]
+    public float[] recoilPattern = new float[] { -1f, 1.5f, -2f, 2f, -1.5f, 1f };
+
+    [Header("=== Module C3: Semi-Auto Penalty (半自动快速点射惩罚) ===")]
+
+    [Tooltip("快速点射时间阈值：两发之间间隔小于此时间视为快速点射（秒）。")]
+    public float rapidFireThreshold = 0.3f;
+
+    [Tooltip("快速点射散布惩罚：连续快速点射时，每发额外增加的散布值。\n" +
+             "用于惩罚半自动武器的暴力点射，迫使玩家控制射击节奏。")]
+    public float rapidFireSpreadPenalty = 0.5f;
+
+    [Tooltip("快速点射惩罚上限：散布惩罚的最大累积值。")]
+    public float maxRapidFirePenalty = 3f;
+
 
     [Header("=== Module C: Camera Shake & FOV (震动特效) ===")]
 

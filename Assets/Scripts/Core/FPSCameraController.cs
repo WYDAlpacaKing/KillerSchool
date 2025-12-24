@@ -2,18 +2,18 @@ using UnityEngine;
 
 public class FPSCameraController : MonoBehaviour
 {
-    [Header("ÒıÓÃ²ÎÊı")]
+    [Header("ï¿½ï¿½ï¿½Ã²ï¿½ï¿½ï¿½")]
     [SerializeField] private Transform playerBody;
     [SerializeField] private PlayerInputHandler inputHandler;
-    [SerializeField] private Camera targetCamera; // ÍÏÈëÏà»ú×é¼ş
+    [SerializeField] private Camera targetCamera; // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 
-    [Header("ÊÓ½ÇÖáÉèÖÃ²ÎÊı")]
+    [Header("ï¿½Ó½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ã²ï¿½ï¿½ï¿½")]
     [SerializeField] private float xSensitivity = 2.0f;
     [SerializeField] private float ySensitivity = 2.0f;
     [SerializeField] private float yClampMin = -85f;
     [SerializeField] private float yClampMax = 85f;
 
-    [Header("ÒÆ¶¯ÇãĞ±²ÎÊı")]
+    [Header("ï¿½Æ¶ï¿½ï¿½ï¿½Ğ±ï¿½ï¿½ï¿½ï¿½")]
     [SerializeField] private float tiltAngle = 3.0f;
     [SerializeField] private float tiltSpeed = 8.0f;
 
@@ -21,21 +21,30 @@ public class FPSCameraController : MonoBehaviour
     private float _xRotation = 0f;
     private float _currentTilt = 0f;
 
-    private float recoilPitch = 0f;// ´¹Ö±ºó×øÁ¦
-    private float recoilYaw = 0f;// Ë®Æ½ºó×øÁ¦
+    private float recoilPitch = 0f;// å‚ç›´åååŠ›ï¼ˆè§†è§‰å±‚ï¼Œè‡ªåŠ¨å›å¤ï¼‰
+    private float recoilYaw = 0f;// æ°´å¹³åååŠ›ï¼ˆè§†è§‰å±‚ï¼‰
 
-    private float recoilTimer = 0f;// ºó×øÁ¦¼ÆÊ±Æ÷
-    private float recoilDuration = 0f;// ºó×øÁ¦³ÖĞøÊ±¼ä
-    private AnimationCurve recoilCurve;// ºó×øÁ¦»Ö¸´ÇúÏß
+    private float recoilTimer = 0f;// åååŠ›è®¡æ—¶å™¨
+    private float recoilDuration = 0f;// åååŠ›æ¢å¤æ—¶é•¿
+    private AnimationCurve recoilCurve;// åååŠ›æ¢å¤æ›²çº¿
 
-    //Ïà»úÕğ¶¯
+    // çœŸå®åååŠ›ç³»ç»Ÿï¼ˆå½±å“å®é™…è§†è§’ï¼Œå¯å‹æªï¼‰
+    private float trueRecoilAccumulated = 0f; // ç´¯ç§¯çš„çœŸå®åååŠ›
+    private float trueRecoilRecoveryTimer = 0f; // çœŸå®åååŠ›æ¢å¤å»¶è¿Ÿè®¡æ—¶å™¨
+    private float currentTrueRecoilRecoveryDelay = 0.3f; // å½“å‰æ¢å¤å»¶è¿Ÿ
+    private float currentTrueRecoilRecoverySpeed = 3f; // å½“å‰æ¢å¤é€Ÿåº¦
+    private float currentMaxTrueRecoil = 12f; // å½“å‰åååŠ›ç´¯ç§¯ä¸Šé™
+
+    //ï¿½ï¿½ï¿½ï¿½ï¿½
     private float shakeTimer = 0f;
-    private float currentShakeIntensity = 0f; // Õğ¶¯Ç¿¶ÈÏµÊı
+    private float currentShakeIntensity = 0f; // ï¿½ï¿½Ç¿ï¿½ï¿½Ïµï¿½ï¿½
     private Vector3 shakeOffset = Vector3.zero;
 
     //FOV
     private float baseFOV;
-    private float targetFOVOffset = 0f;// Ä¿±êFOVÆ«ÒÆÁ¿
+    private float targetFOVOffset = 0f;// Ä¿ï¿½ï¿½FOVÆ«ï¿½ï¿½ï¿½ï¿½
+
+   
 
     private void Start()
     {
@@ -47,35 +56,55 @@ public class FPSCameraController : MonoBehaviour
 
     private void LateUpdate()
     {
-        // Èç¹ûµ÷ÊÔÃæ°å´ò¿ª ÔòºöÂÔËùÓĞÊäÈë
+        // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         if (DebuggerManager.Instance != null && DebuggerManager.Instance.IsVisible)
             return;
 
 
         if (inputHandler == null) return;
 
-        // ²¶×½Êó±êÊäÈë
+        // ï¿½ï¿½×½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         float mouseX = inputHandler.LookInput.x * xSensitivity;
         float mouseY = inputHandler.LookInput.y * ySensitivity;
 
-        // ÉÏÏÂÊÓ½Ç
+        // ï¿½ï¿½ï¿½ï¿½ï¿½Ó½ï¿½
         _xRotation -= mouseY;
         _xRotation = Mathf.Clamp(_xRotation, yClampMin, yClampMax);
 
-        // ´¦Àíºó×øÁ¦»Ø¸´
+        // è§†è§‰åååŠ›æ¢å¤ï¼ˆè‡ªåŠ¨å›æ­£ï¼‰
         if (recoilTimer > 0)
         {
             recoilTimer -= Time.deltaTime;
             
-            recoilPitch = Mathf.Lerp(recoilPitch, 0f, Time.deltaTime * 5f);// Æ½»¬»Ø¸´
+            recoilPitch = Mathf.Lerp(recoilPitch, 0f, Time.deltaTime * 5f);// å¹³æ»‘æ¢å¤
             recoilYaw = Mathf.Lerp(recoilYaw, 0f, Time.deltaTime * 5f);
         }
 
-        // °ØÁÖÔëÉù×öÕğ¶¯
+        // çœŸå®åååŠ›æ¢å¤ï¼ˆå»¶è¿Ÿåè‡ªåŠ¨å›æ­£ï¼‰
+        if (trueRecoilAccumulated > 0.01f)
+        {
+            trueRecoilRecoveryTimer -= Time.deltaTime;
+            
+            // å»¶è¿Ÿç»“æŸåå¼€å§‹æ¢å¤
+            if (trueRecoilRecoveryTimer <= 0 && currentTrueRecoilRecoverySpeed > 0)
+            {
+                float recoveryAmount = currentTrueRecoilRecoverySpeed * Time.deltaTime;
+                trueRecoilAccumulated = Mathf.Max(0f, trueRecoilAccumulated - recoveryAmount);
+                
+                // æ¢å¤çœŸå®è§†è§’ï¼ˆå‘ä¸‹ç§»åŠ¨ï¼‰
+                _xRotation = Mathf.Lerp(_xRotation, _xRotation + recoveryAmount, 0.5f);
+            }
+        }
+        else
+        {
+            trueRecoilAccumulated = 0f;
+        }
+
+        // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         if (shakeTimer > 0)
         {
             shakeTimer -= Time.deltaTime;
-            // TODO: ÆµÂÊ²ÎÊıÔİÊ±Ğ´ËÀ20f
+            // TODO: Æµï¿½Ê²ï¿½ï¿½ï¿½ï¿½ï¿½Ê±Ğ´ï¿½ï¿½20f
             float x = (Mathf.PerlinNoise(Time.time * 20f, 0f) - 0.5f) * 2f * currentShakeIntensity;
             float y = (Mathf.PerlinNoise(0f, Time.time * 20f) - 0.5f) * 2f * currentShakeIntensity;
             shakeOffset = new Vector3(x, y, 0);
@@ -85,45 +114,90 @@ public class FPSCameraController : MonoBehaviour
             shakeOffset = Vector3.zero;
         }
 
-        // ÇãĞ±
+        // ï¿½ï¿½Ğ±
         float inputX = inputHandler.MoveInput.x;
         float targetTilt = -inputX * tiltAngle;
         _currentTilt = Mathf.Lerp(_currentTilt, targetTilt, Time.deltaTime * tiltSpeed);
 
-        // Ó¦ÓÃĞı×ª!!! ( »ù´¡ + Recoil + Shake + Tilt)
-        // ×¢ÒâÕâÀï Recoil ÊÇµş¼ÓÔÚ xRotation ÉÏµÄ ºóĞø²»ÒªÔÙ¶Ô xRotation ×ö´¦ÀíÁË
+        // Ó¦ï¿½ï¿½ï¿½ï¿½×ª!!! ( ï¿½ï¿½ï¿½ï¿½ + Recoil + Shake + Tilt)
+        // ×¢ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ Recoil ï¿½Çµï¿½ï¿½ï¿½ï¿½ï¿½ xRotation ï¿½Ïµï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Òªï¿½Ù¶ï¿½ xRotation ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         Quaternion finalRot = Quaternion.Euler(_xRotation - recoilPitch + shakeOffset.x, shakeOffset.y + recoilYaw, _currentTilt);
         transform.localRotation = finalRot;
 
-        // ÊúÖ±ºó×ùÁ¦Ó¦ÓÃÔÚÏà»úÉÏ Ë®Æ½ºó×øÁ¦Ó¦ÓÃÔÚ½ÇÉ«ÉíÉÏ 
+        // ï¿½ï¿½Ö±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó¦ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ Ë®Æ½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó¦ï¿½ï¿½ï¿½Ú½ï¿½É«ï¿½ï¿½ï¿½ï¿½ 
         playerBody.Rotate(Vector3.up * (mouseX + recoilYaw * Time.deltaTime));
 
-        // FOV ´¦Àí
-        targetFOVOffset = Mathf.Lerp(targetFOVOffset, 0f, Time.deltaTime * 10f); // ¿ìËÙ»Øµ¯
+        // FOV ï¿½ï¿½ï¿½ï¿½
+        targetFOVOffset = Mathf.Lerp(targetFOVOffset, 0f, Time.deltaTime * 10f); // ï¿½ï¿½ï¿½Ù»Øµï¿½
         targetCamera.fieldOfView = baseFOV + targetFOVOffset;
     }
 
 
     /// <summary>
-    /// Applies recoil to the current object, affecting its vertical and horizontal orientation.
+    /// åº”ç”¨è§†è§‰åååŠ›ï¼ˆè‡ªåŠ¨å›æ­£ï¼Œç”¨äºåŠè‡ªåŠ¨æ­¦å™¨æˆ–ä½œä¸ºå…¨è‡ªåŠ¨æ­¦å™¨çš„è¾…åŠ©æ•ˆæœï¼‰
     /// </summary>
-    /// <remarks>This method modifies the object's orientation by adding the specified vertical and horizontal
-    /// recoil values. The recoil effect is applied over the specified duration using the provided animation
-    /// curve.</remarks>
-    /// <param name="vertical">The amount of vertical recoil to apply.</param>
-    /// <param name="horizontal">The amount of horizontal recoil to apply.</param>
-    /// <param name="duration">The duration over which the recoil effect will be applied.</param>
-    /// <param name="curve">An <see cref="AnimationCurve"/> that defines the recoil effect over time.</param>
+    /// <param name="vertical">å‚ç›´åååŠ›é‡</param>
+    /// <param name="horizontal">æ°´å¹³åååŠ›é‡</param>
+    /// <param name="duration">æ¢å¤æ—¶é•¿</param>
+    /// <param name="curve">æ¢å¤æ›²çº¿</param>
     public void ApplyRecoil(float vertical, float horizontal, float duration, AnimationCurve curve)
     {
-        // Ë²¼ä¼ÓÉÏºó×øÁ¦
+        // ç¬é—´å åŠ åååŠ›
         recoilPitch += vertical;
-        recoilYaw += horizontal; // ¼òµ¥µÄË®Æ½Æ«ÒÆ
+        recoilYaw += horizontal; // ç®€å•çš„æ°´å¹³åç§»
 
-        // Æô¶¯»Ø¸´Âß¼­
+        // å¯åŠ¨æ¢å¤é€»è¾‘
         recoilDuration = duration;
         recoilCurve = curve;
         recoilTimer = duration;
+    }
+
+    /// <summary>
+    /// åº”ç”¨çœŸå®åååŠ›ï¼ˆçœŸæ­£æ”¹å˜ç©å®¶è§†è§’ï¼Œç©å®¶å¯é€šè¿‡å‹æªæŠµæ¶ˆï¼‰
+    /// ç”¨äºå…¨è‡ªåŠ¨æ­¦å™¨ï¼Œåˆ›é€ éœ€è¦æ§åˆ¶çš„åååŠ›æ‰‹æ„Ÿ
+    /// </summary>
+    /// <param name="vertical">å‚ç›´åååŠ›ï¼ˆå‘ä¸ŠæŠ¬èµ·çš„è§’åº¦ï¼‰</param>
+    /// <param name="horizontal">æ°´å¹³åååŠ›ï¼ˆå·¦å³åç§»çš„è§’åº¦ï¼‰</param>
+    /// <param name="recoveryDelay">åœæ­¢å°„å‡»åå¤šä¹…å¼€å§‹æ¢å¤</param>
+    /// <param name="recoverySpeed">æ¢å¤é€Ÿåº¦</param>
+    /// <param name="maxAccumulation">åååŠ›ç´¯ç§¯ä¸Šé™</param>
+    public void ApplyTrueRecoil(float vertical, float horizontal, float recoveryDelay, float recoverySpeed, float maxAccumulation)
+    {
+        // æ›´æ–°å½“å‰ä¸Šé™
+        currentMaxTrueRecoil = maxAccumulation;
+
+        // æ£€æŸ¥æ˜¯å¦å·²è¾¾åˆ°ç´¯ç§¯ä¸Šé™
+        float remainingRoom = currentMaxTrueRecoil - trueRecoilAccumulated;
+        
+        if (remainingRoom > 0.01f)
+        {
+            // è®¡ç®—å®é™…åº”ç”¨çš„å‚ç›´åååŠ›ï¼ˆä¸è¶…è¿‡å‰©ä½™ç©ºé—´ï¼‰
+            float actualVertical = Mathf.Min(vertical, remainingRoom);
+            
+            // çœŸæ­£æ”¹å˜ç©å®¶çš„è§†è§’ï¼ˆå‘ä¸ŠæŠ¬ï¼‰
+            _xRotation -= actualVertical; // å‡å°‘ xRotation ä¼šè®©è§†è§’å‘ä¸ŠæŠ¬
+            _xRotation = Mathf.Clamp(_xRotation, yClampMin, yClampMax);
+            
+            // è®°å½•ç´¯ç§¯çš„çœŸå®åååŠ›
+            trueRecoilAccumulated += actualVertical;
+        }
+        // å¦‚æœè¾¾åˆ°ä¸Šé™ï¼Œå‚ç›´åååŠ›ä¸å†ç”Ÿæ•ˆï¼Œä½†æ°´å¹³åååŠ›ä»ç„¶ç”Ÿæ•ˆ
+        
+        // æ°´å¹³åååŠ›åº”ç”¨åˆ°è§’è‰²èº«ä½“æ—‹è½¬ï¼ˆä¸å—ä¸Šé™é™åˆ¶ï¼‰
+        playerBody.Rotate(Vector3.up * horizontal);
+        
+        // é‡ç½®æ¢å¤è®¡æ—¶å™¨
+        trueRecoilRecoveryTimer = recoveryDelay;
+        currentTrueRecoilRecoveryDelay = recoveryDelay;
+        currentTrueRecoilRecoverySpeed = recoverySpeed;
+    }
+
+    /// <summary>
+    /// é‡ç½®çœŸå®åååŠ›ç´¯ç§¯å€¼ï¼ˆå½“ç©å®¶é€šè¿‡å‹æªå®Œå…¨æŠµæ¶ˆåååŠ›æ—¶è°ƒç”¨ï¼‰
+    /// </summary>
+    public void ResetTrueRecoilAccumulation()
+    {
+        trueRecoilAccumulated = 0f;
     }
 
     /// <summary>
@@ -139,7 +213,7 @@ public class FPSCameraController : MonoBehaviour
         currentShakeIntensity = amplitude;
         shakeTimer = duration;
         // TODO:
-        // FrequencyÔÚ°ØÔëÀïÃæÓÃ ÏÈÓÃ20fĞ´ËÀÁË
+        // Frequencyï¿½Ú°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½20fĞ´ï¿½ï¿½ï¿½ï¿½
     }
 
     /// <summary>
