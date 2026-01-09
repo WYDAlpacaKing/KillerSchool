@@ -98,6 +98,12 @@ public class WeaponFeelConfig: ScriptableObject
              "增加一些不可预测性，让手感更自然。")]
     public float alternatingRandomness = 0.3f;
 
+    [Tooltip("水平后坐力平滑时间：镜头从当前位置过渡到目标位置的时间（秒）。\n" +
+             "值越小越灵敏干脆，值越大越平滑柔和。\n" +
+             "建议值：0.05-0.15")]
+    [Range(0.02f, 0.3f)]
+    public float horizontalRecoilSmoothTime = 0.08f;
+
     [Tooltip("后坐力模式序列（Pattern模式专用）：\n" +
              "定义每发子弹的水平偏移角度，循环使用。\n" +
              "例如：[-1, 2, -2, 1, 0] 表示先左再右再左...")]

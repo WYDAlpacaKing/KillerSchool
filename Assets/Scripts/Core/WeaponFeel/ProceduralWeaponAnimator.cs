@@ -176,7 +176,8 @@ public class ProceduralWeaponAnimator : MonoBehaviour
                         hRecoil * trueRatio,
                         config.trueRecoilRecoveryDelay,
                         config.trueRecoilRecoverySpeed,
-                        config.maxTrueRecoilAccumulation
+                        config.maxTrueRecoilAccumulation,
+                        config.horizontalRecoilSmoothTime
                     );
                 }
 

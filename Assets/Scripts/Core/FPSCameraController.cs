@@ -35,6 +35,12 @@ public class FPSCameraController : MonoBehaviour
     private float currentTrueRecoilRecoverySpeed = 3f; // 当前恢复速度
     private float currentMaxTrueRecoil = 12f; // 当前后坐力累积上限
 
+    // 水平后坐力平滑系统
+    private float targetHorizontalRecoil = 0f; // 目标水平后坐力偏移
+    private float currentHorizontalRecoil = 0f; // 当前水平后坐力偏移（平滑过渡中）
+    private float horizontalRecoilVelocity = 0f; // SmoothDamp 速度缓存
+    private float horizontalRecoilSmoothTime = 0.08f; // 平滑时间
+
     //�����
     private float shakeTimer = 0f;
     private float currentShakeIntensity = 0f; // ��ǿ��ϵ��
@@ -100,6 +106,26 @@ public class FPSCameraController : MonoBehaviour
             trueRecoilAccumulated = 0f;
         }
 
+        // 水平后坐力平滑处理
+        // 使用 SmoothDamp 实现平滑过渡，而不是瞬间跳跃
+        float previousHorizontal = currentHorizontalRecoil;
+        currentHorizontalRecoil = Mathf.SmoothDamp(
+            currentHorizontalRecoil, 
+            targetHorizontalRecoil, 
+            ref horizontalRecoilVelocity, 
+            horizontalRecoilSmoothTime
+        );
+        
+        // 计算本帧的增量并应用到角色旋转
+        float horizontalDelta = currentHorizontalRecoil - previousHorizontal;
+        if (Mathf.Abs(horizontalDelta) > 0.001f)
+        {
+            playerBody.Rotate(Vector3.up * horizontalDelta);
+        }
+
+        // 目标值缓慢衰减回零（水平后坐力自然回正）
+        targetHorizontalRecoil = Mathf.Lerp(targetHorizontalRecoil, 0f, Time.deltaTime * 8f);
+
         // ������������
         if (shakeTimer > 0)
         {
@@ -161,7 +187,8 @@ public class FPSCameraController : MonoBehaviour
     /// <param name="recoveryDelay">停止射击后多久开始恢复</param>
     /// <param name="recoverySpeed">恢复速度</param>
     /// <param name="maxAccumulation">后坐力累积上限</param>
-    public void ApplyTrueRecoil(float vertical, float horizontal, float recoveryDelay, float recoverySpeed, float maxAccumulation)
+    /// <param name="horizontalSmoothTime">水平后坐力平滑时间</param>
+    public void ApplyTrueRecoil(float vertical, float horizontal, float recoveryDelay, float recoverySpeed, float maxAccumulation, float horizontalSmoothTime = 0.08f)
     {
         // 更新当前上限
         currentMaxTrueRecoil = maxAccumulation;
@@ -183,8 +210,9 @@ public class FPSCameraController : MonoBehaviour
         }
         // 如果达到上限，垂直后坐力不再生效，但水平后坐力仍然生效
         
-        // 水平后坐力应用到角色身体旋转（不受上限限制）
-        playerBody.Rotate(Vector3.up * horizontal);
+        // 水平后坐力：设置目标值，在 LateUpdate 中平滑过渡
+        targetHorizontalRecoil += horizontal;
+        horizontalRecoilSmoothTime = horizontalSmoothTime;
         
         // 重置恢复计时器
         trueRecoilRecoveryTimer = recoveryDelay;

@@ -21,7 +21,6 @@ public class NoodleArmController : MonoBehaviour
     public DebugPoseState debugState = DebugPoseState.Gameplay_Default;
 
     [Header("Global Settings")]
-    public bool startWithWeapon = false;
     public float transitionSpeed = 10f;
 
     [Header("Materials")]
@@ -29,8 +28,7 @@ public class NoodleArmController : MonoBehaviour
     [SerializeField] private Material fingerMat;
 
     // 武器预制体
-    [SerializeField] private WeaponBase startingWeaponPrefab;
-    private WeaponBase activeWeapon;
+    public WeaponBase activeWeapon;
 
     // --- 数据结构 ---
     [System.Serializable]
@@ -111,21 +109,21 @@ public class NoodleArmController : MonoBehaviour
         SetupLine(ref fingerLines[0], ref fingerTransforms[0], "RightFinger", fingerMat);
         SetupLine(ref fingerLines[1], ref fingerTransforms[1], "LeftFinger", fingerMat);
 
-        if (startingWeaponPrefab != null)
-        {
-            GameObject gunObj = Instantiate(startingWeaponPrefab.gameObject, cameraTransform);
-            gunObj.transform.localPosition = Vector3.zero;
-            gunObj.transform.localRotation = Quaternion.identity;
+        //if (startingWeaponPrefab != null)
+        //{
+        //    GameObject gunObj = Instantiate(startingWeaponPrefab.gameObject, cameraTransform);
+        //    gunObj.transform.localPosition = Vector3.zero;
+        //    gunObj.transform.localRotation = Quaternion.identity;
 
-            activeWeapon = gunObj.GetComponent<WeaponBase>();
-            if (activeWeapon != null)
-            {
-                activeWeapon.OnFire += OnWeaponFired;
-                hasWeaponEquipped = startWithWeapon;
-                if (hasWeaponEquipped) activeWeapon.OnEquip();
-                else activeWeapon.OnUnequip();
-            }
-        }
+        //    activeWeapon = gunObj.GetComponent<WeaponBase>();
+        //    if (activeWeapon != null)
+        //    {
+        //        activeWeapon.OnFire += OnWeaponFired;
+        //        hasWeaponEquipped = startWithWeapon;
+        //        if (hasWeaponEquipped) activeWeapon.OnEquip();
+        //        else activeWeapon.OnUnequip();
+        //    }
+        //}
     }
 
     private void SetupLine(ref LineRenderer lr, ref Transform container, string name, Material mat)
@@ -164,14 +162,46 @@ public class NoodleArmController : MonoBehaviour
         UpdateGunTransform();
     }
 
+    /// <summary>
+    /// 核心方法：由背包系统调用，强制更换当前手持的武器
+    /// </summary>
+    public void EquipWeapon(WeaponBase newWeapon)
+    {
+        // 1. 如果手里有旧武器，先卸下（隐藏或销毁，取决于你的架构，这里我们假设背包系统只是隐藏了它）
+        if (activeWeapon != null)
+        {
+            activeWeapon.OnUnequip();
+            // 注意：如果是仅仅隐藏物体，不要Destroy。如果是替换逻辑，背包层会处理Destroy。
+        }
+
+        // 2. 换上新武器
+        activeWeapon = newWeapon;
+        hasWeaponEquipped = (activeWeapon != null);
+
+        if (activeWeapon != null)
+        {
+            // 确保物理层级正确
+            activeWeapon.transform.SetParent(cameraTransform);
+            activeWeapon.transform.localPosition = Vector3.zero;
+            activeWeapon.transform.localRotation = Quaternion.identity;
+
+            // 激活
+            activeWeapon.OnEquip();
+
+            // 绑定事件 (确保没有重复绑定，先解绑)
+            activeWeapon.OnFire -= OnWeaponFired;
+            activeWeapon.OnFire += OnWeaponFired;
+        }
+    }
+
     private void HandleInput()
     {
         if (inputHandler == null) return;
 
-        if (inputHandler.SwitchWeaponTriggered && activeWeapon != null)
-        {
-            ToggleWeapon();
-        }
+        //if (inputHandler.SwitchWeaponTriggered && activeWeapon != null)
+        //{
+        //    ToggleWeapon();
+        //}
 
         if (debugState == DebugPoseState.Gameplay_Default)
         {

@@ -11,6 +11,7 @@ public class PlayerInputHandler : MonoBehaviour
     public bool JumpTriggered { get; private set; }
     public bool Sprinting { get; private set; }
     public bool CrouchTriggered { get; private set; }
+    public bool InteractTriggered { get; private set; }
 
     // ÎäÆ÷
     public bool FireTriggered { get; private set; } 
@@ -33,9 +34,10 @@ public class PlayerInputHandler : MonoBehaviour
             FireHeld = false;
             Aiming = false;
             SwitchWeaponTriggered = false;
+            InteractTriggered = false;
             return;
         }
-
+        InteractTriggered = Input.GetKeyDown(KeyCode.E);
         MoveInput = new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical"));
         LookInput = new Vector2(Input.GetAxisRaw("Mouse X"), Input.GetAxisRaw("Mouse Y")) * mouseSensitivity;
 

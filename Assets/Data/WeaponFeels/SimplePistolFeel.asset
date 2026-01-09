@@ -59,13 +59,30 @@ MonoBehaviour:
     m_PostInfinity: 2
     m_RotationOrder: 4
   recoilRecoveryDuration: 0.3
+  trueRecoilRatio: 0.7
+  maxTrueRecoilAccumulation: 12
+  trueRecoilRecoveryDelay: 0.3
+  trueRecoilRecoverySpeed: 4.47
+  horizontalMode: 1
+  alternatingRecoilAmount: 3.07
+  alternatingRandomness: 0.29
+  recoilPattern:
+  - -1
+  - 1.5
+  - -2
+  - 2
+  - -1.5
+  - 1
+  rapidFireThreshold: 0.3
+  rapidFireSpreadPenalty: 0.5
+  maxRapidFirePenalty: 3
   shakeAmplitude: 0.3
   shakeFrequency: 2
   shakeDuration: 0.2
   fovKick: 4
-  baseSpread: 0.2
-  spreadPerShot: 0.2
-  maxSpread: 4
+  baseSpread: 0.92
+  spreadPerShot: 4.12
+  maxSpread: 29.3
   spreadRecoverySpeed: 5
   movementSpreadPenalty: 2
   swayAmount: 0.005
