@@ -6,6 +6,7 @@ public class ScanTargetData : MonoBehaviour
     {
         Civilian,
         Guard,
+        Bandit,
         Target
     }
 

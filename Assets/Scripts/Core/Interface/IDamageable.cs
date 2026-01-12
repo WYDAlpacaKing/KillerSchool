@@ -13,4 +13,7 @@ public interface IDamageable
     /// <param name="hitPoint">击中点 (用于生成特效)</param>
     /// <param name="hitNormal">击中法线 (用于确定击退方向)</param>
     void TakeDamage(float damage, Vector3 hitPoint, Vector3 hitNormal);
+
+    // 获取所属阵营 (用于武器判断敌我)
+    int GetTeamID();
 }

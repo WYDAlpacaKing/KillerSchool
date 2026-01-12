@@ -31,43 +31,54 @@ public class SMG_0 : WeaponBase
         // 计算散布
         Ray centerRay = mainCam.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0));
         Vector3 spreadDir = ApplySpread(centerRay.direction);
-
+        if (AudioManager.Instance != null)
+        {
+            // 这里的 pistolShoots 需要你在 AudioManager 里填好
+            // 0.1f 的音调浮动让连射听起来不机械
+            AudioManager.Instance.PlaySound3D(AudioManager.Instance.smgShoots, muzzlePoint.position, 1.0f, 0.1f);
+        }
         // 射线检测
         if (Physics.Raycast(centerRay.origin, spreadDir, out RaycastHit hit, weaponData.maxRange))
         {
-            HandleHit(hit, spreadDir);
+            HandleHit_WithDamage(hit, spreadDir); // 调用新的处理方法
         }
 
         Debug.Log($"<color=orange>{weaponName} 开火!</color>");
     }
 
-    
-    private void HandleHit(RaycastHit hit, Vector3 bulletDir)
+
+    private void HandleHit_WithDamage(RaycastHit hit, Vector3 bulletDir)
     {
-        // 获取接口
-        IDamageable damageable = hit.collider.GetComponent<IDamageable>();
+        IDamageable damageable = hit.collider.GetComponentInParent<IDamageable>();
+
         if (damageable != null)
         {
-            //距离衰减计算
+            // === 1. 敌我识别 ===
+            if (damageable.GetTeamID() == this.ownerTeamID) return; // 自己人，不打
+
+            // === 2. 伤害计算 ===
             float distance = Vector3.Distance(muzzlePoint.position, hit.point);
             float distanceRatio = Mathf.Clamp01(distance / weaponData.maxRange);
             float damageMultiplier = weaponData.damageFalloff.Evaluate(distanceRatio);
             float finalDamage = weaponData.damage * damageMultiplier;
+
+            // === 3. 扣血 ===
             damageable.TakeDamage(finalDamage, hit.point, hit.normal);
 
-            // 命中特效!!!!!!!!!!!
+            // 命中特效
             if (weaponData.hitVFXPrefab != null)
             {
                 Instantiate(weaponData.hitVFXPrefab, hit.point, Quaternion.LookRotation(hit.normal));
             }
         }
-        else // 是非命中物体
+        else
         {
-            DecalManager.Instance?.SpawnDecal(weaponData.decalPrefab, hit.point, hit.normal, weaponData.decalDuration);
+            // 打中墙壁等死物
+            if (DecalManager.Instance != null)
+                DecalManager.Instance.SpawnDecal(weaponData.decalPrefab, hit.point, hit.normal, weaponData.decalDuration);
         }
 
-        
-        if (hit.rigidbody != null) // 能推
+        if (hit.rigidbody != null)
         {
             hit.rigidbody.AddForceAtPosition(bulletDir * weaponData.impactForce, hit.point, ForceMode.Impulse);
         }

@@ -15,12 +15,21 @@ public class DestructibleProp : MonoBehaviour, IDamageable
 
     public Action OnDestroyed; // 物体被销毁时的回调
 
+    [Header("Team Settings")]
+    [Tooltip("通常设为 999 (中立) 或 2 (障碍物)，确保不等于 Player(0) 或 Enemy(1)")]
+    [SerializeField] private int teamID = 999; // 默认中立
+
     private void Start()
     {
         currentHealth = maxHealth;
         rb = GetComponent<Rigidbody>();
     }
-
+    // === 修复点：实现 GetTeamID ===
+    public int GetTeamID()
+    {
+        // 返回配置好的 teamID，而不是抛出异常
+        return teamID;
+    }
 
     public void TakeDamage(float damage, Vector3 hitPoint, Vector3 hitNormal)
     {
@@ -46,4 +55,5 @@ public class DestructibleProp : MonoBehaviour, IDamageable
         // 简单销毁  后面可以用对象池
         Destroy(gameObject);
     }
+
 }

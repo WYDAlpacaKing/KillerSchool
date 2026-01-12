@@ -33,6 +33,9 @@ public class InventoryManager : MonoBehaviour
 
         // 默认装备第一个
         EquipSlot(0);
+
+        // === 新增：初始化 UI ===
+        RefreshUI();
     }
 
     private void Update()
@@ -96,6 +99,20 @@ public class InventoryManager : MonoBehaviour
         {
             // 如果这个槽位是空的（比如还没获得望远镜），告诉面条手现在是空手
             armController.EquipWeapon(null);
+        }
+
+        // === 新增：播放切换音效 ===
+        // ToolSwapAudio 也是 AudioManager 里的一个数组
+        AudioManager.Instance.PlaySound2D(AudioManager.Instance.uiClicks, 0.5f);
+        RefreshUI();
+    }
+
+    // 辅助方法：调用 HUD 更新
+    private void RefreshUI()
+    {
+        if (HUDController.Instance != null)
+        {
+            HUDController.Instance.UpdateInventoryUI(weaponSlots, currentSlotIndex);
         }
     }
 
